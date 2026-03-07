@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-chart-line"></i> Advanced Analytics</h2>
+
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card success">
+            <div class="card-body">
+                <h6 class="text-muted">This Month Revenue</h6>
+                <h2>₹{{ "%.2f"|format(monthly_revenue) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card info">
+            <div class="card-body">
+                <h6 class="text-muted">Average Stay</h6>
+                <h2>{{ avg_stay }} nights</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card primary">
+            <div class="card-body">
+                <h6 class="text-muted">Top Guests</h6>
+                <h2>{{ top_guests|length }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card warning">
+            <div class="card-body">
+                <h6 class="text-muted">Best Rooms</h6>
+                <h2>{{ room_performance|length }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Guests -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-users"></i> Top Guests by Bookings</h5>
+            </div>
+            <div class="card-body">
+                {% if top_guests %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Guest Name</th>
+                                <th>Phone</th>
+                                <th>Bookings</th>
+                                <th>Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for guest in top_guests %}
+                            <tr>
+                                <td>
+                                    {% if loop.index == 1 %}
+                                    <i class="fas fa-trophy text-warning"></i>
+                                    {% elif loop.index == 2 %}
+                                    <i class="fas fa-medal text-secondary"></i>
+                                    {% elif loop.index == 3 %}
+                                    <i class="fas fa-medal" style="color: #cd7f32;"></i>
+                                    {% else %}
+                                    {{ loop.index }}
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ guest.name }}</strong></td>
+                                <td>{{ guest.phone }}</td>
+                                <td><span class="badge bg-primary">{{ guest.booking_count }}</span></td>
+                                <td>₹{{ "%.2f"|format(guest.total_spent or 0) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted">No completed bookings yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Room Performance -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bed"></i> Top Performing Rooms</h5>
+            </div>
+            <div class="card-body">
+                {% if room_performance %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Type</th>
+                                <th>Bookings</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in room_performance %}
+                            <tr>
+                                <td><strong>{{ room.room_number }}</strong></td>
+                                <td>{{ room.room_type }}</td>
+                                <td><span class="badge bg-info">{{ room.bookings }}</span></td>
+                                <td>₹{{ "%.2f"|format(room.revenue or 0) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted">No completed bookings yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-body">
+        <h5 class="mb-3">Quick Actions</h5>
+        <div class="row">
+            <div class="col-md-3">
+                <a href="{{ url_for('reports') }}" class="btn btn-primary w-100 mb-2">
+                    <i class="fas fa-file-alt"></i> View Reports
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('bookings') }}" class="btn btn-success w-100 mb-2">
+                    <i class="fas fa-calendar"></i> All Bookings
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('guests') }}" class="btn btn-info w-100 mb-2">
+                    <i class="fas fa-users"></i> All Guests
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('rooms') }}" class="btn btn-warning w-100 mb-2">
+                    <i class="fas fa-bed"></i> Manage Rooms
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

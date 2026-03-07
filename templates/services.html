@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-concierge-bell"></i> Additional Services</h2>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+        <i class="fas fa-plus"></i> Add Service
+    </button>
+</div>
+
+<div class="row">
+    {% if services %}
+        {% for service in services %}
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 {% if not service.is_active %}opacity-50{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title">{{ service.name }}</h5>
+                        <span class="badge bg-{{ service.category }}">{{ service.category|title }}</span>
+                    </div>
+                    <p class="card-text">
+                        <strong>Price:</strong> ₹{{ service.price }}<br>
+                        {% if service.description %}
+                        <small class="text-muted">{{ service.description }}</small>
+                        {% endif %}
+                    </p>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-{{ 'success' if service.is_active else 'secondary' }}">
+                            {{ 'Active' if service.is_active else 'Inactive' }}
+                        </span>
+                        <a href="{{ url_for('toggle_service', service_id=service.id) }}" 
+                           class="btn btn-sm btn-{{ 'warning' if service.is_active else 'success' }}">
+                            <i class="fas fa-{{ 'pause' if service.is_active else 'play' }}"></i>
+                            {{ 'Deactivate' if service.is_active else 'Activate' }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-concierge-bell fa-3x mb-3 d-block"></i>
+                <p>No services added yet. Click "Add Service" to create one.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Add Service Modal -->
+<div class="modal fade" id="addServiceModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_service') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Service Name *</label>
+                        <input type="text" class="form-control" name="name" required 
+                               placeholder="e.g., Breakfast, Airport Pickup">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category *</label>
+                        <select class="form-select" name="category" required>
+                            <option value="food">🍽️ Food & Beverages</option>
+                            <option value="laundry">👕 Laundry</option>
+                            <option value="transport">🚗 Transport</option>
+                            <option value="spa">💆 Spa & Wellness</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Price (₹) *</label>
+                        <input type="number" class="form-control" name="price" step="0.01" required 
+                               placeholder="e.g., 500">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3" 
+                                  placeholder="Brief description of the service"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Service</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

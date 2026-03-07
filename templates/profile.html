@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h2 class="mb-4"><i class="fas fa-user-circle"></i> My Profile</h2>
+        
+        {% if current_user.role == 'guest' and guest %}
+        <!-- Guest Profile Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Edit Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" name="name" value="{{ guest.name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone *</label>
+                            <input type="text" class="form-control" name="phone" value="{{ guest.phone }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" value="{{ guest.email or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ID Proof</label>
+                        <input type="text" class="form-control" name="id_proof" value="{{ guest.id_proof or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" name="address" rows="3">{{ guest.address or '' }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <!-- Admin/Staff Profile -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Account Information</h5>
+                <p><strong>Username:</strong> {{ current_user.username }}</p>
+                <p><strong>Role:</strong> {{ current_user.role|title }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Change Password Section -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-key"></i> Security</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Username:</strong> {{ current_user.username }}</p>
+                <a href="{{ url_for('change_password') }}" class="btn btn-warning">
+                    <i class="fas fa-lock"></i> Change Password
+                </a>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <a href="{{ url_for('guest_dashboard') if current_user.role == 'guest' else url_for('dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

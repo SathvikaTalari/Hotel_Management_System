@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-chart-bar"></i> Reports & Analytics</h2>
+
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('reports') }}">
+            <div class="row align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" name="start_date" 
+                           value="{{ start_date if start_date else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date" 
+                           value="{{ end_date if end_date else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter"></i> Apply Filter
+                    </button>
+                    <a href="{{ url_for('reports') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted">Total Revenue</h6>
+                        <h2>₹{{ total_revenue|round(2) }}</h2>
+                        {% if start_date and end_date %}
+                        <small class="text-muted">{{ start_date }} to {{ end_date }}</small>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <i class="fas fa-money-bill-wave fa-3x text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted">Total Bookings</h6>
+                        <h2>{{ total_bookings }}</h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-calendar-alt fa-3x text-primary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted">Completed Bookings</h6>
+                        <h2>{{ completed_bookings }}</h2>
+                    </div>
+                    <div>
+                        <i class="fas fa-check-circle fa-3x text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Reports Section -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-download"></i> Export Reports</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <button class="btn btn-success w-100" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+            </div>
+            <div class="col-md-4 mb-3">
+                <button class="btn btn-primary w-100" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print Report
+                </button>
+            </div>
+            <div class="col-md-4 mb-3">
+                <button class="btn btn-info w-100" onclick="exportToCSV()">
+                    <i class="fas fa-file-csv"></i> Export to CSV
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Bookings List -->
+{% if bookings_list %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-list"></i> Detailed Bookings ({{ bookings_list|length }})</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Guest</th>
+                        <th>Room</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Days</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings_list %}
+                    <tr>
+                        <td><strong>#{{ booking.id }}</strong></td>
+                        <td>{{ booking.guest.name }}</td>
+                        <td>{{ booking.room.room_number }}</td>
+                        <td>{{ booking.check_in.strftime('%d-%m-%Y') }}</td>
+                        <td>{{ booking.check_out.strftime('%d-%m-%Y') if booking.check_out else '-' }}</td>
+                        <td>{{ (booking.check_out - booking.check_in).days if booking.check_out else 0 }}</td>
+                        <td>₹{{ booking.total_amount|round(2) if booking.total_amount else 0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+// Export to Excel
+function exportToExcel() {
+    var data = [
+        ['Hotel Management System - Reports'],
+        ['Generated on: ' + new Date().toLocaleDateString()],
+        {% if start_date and end_date %}
+        ['Period: {{ start_date }} to {{ end_date }}'],
+        {% endif %}
+        [],
+        ['Summary Statistics'],
+        ['Total Revenue', '₹{{ total_revenue|round(2) }}'],
+        ['Total Bookings', '{{ total_bookings }}'],
+        ['Completed Bookings', '{{ completed_bookings }}'],
+        []
+    ];
+    
+    {% if bookings_list %}
+    data.push(['Booking Details']);
+    data.push(['ID', 'Guest', 'Room', 'Check-in', 'Check-out', 'Days', 'Amount']);
+    {% for booking in bookings_list %}
+    data.push([
+        '#{{ booking.id }}', 
+        '{{ booking.guest.name }}', 
+        '{{ booking.room.room_number }}', 
+        '{{ booking.check_in.strftime("%d-%m-%Y") }}', 
+        '{{ booking.check_out.strftime("%d-%m-%Y") if booking.check_out else "-" }}',
+        '{{ (booking.check_out - booking.check_in).days if booking.check_out else 0 }}', 
+        '₹{{ booking.total_amount|round(2) if booking.total_amount else 0 }}'
+    ]);
+    {% endfor %}
+    {% endif %}
+    
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Report');
+    XLSX.writeFile(wb, 'hotel_report_' + new Date().toISOString().split('T')[0] + '.xlsx');
+}
+
+// Export to CSV
+function exportToCSV() {
+    var csv = [
+        ['Metric', 'Value'],
+        ['Total Revenue', '₹{{ total_revenue|round(2) }}'],
+        ['Total Bookings', '{{ total_bookings }}'],
+        ['Completed Bookings', '{{ completed_bookings }}']
+    ].map(function(row) { return row.join(','); }).join('\n');
+    
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var url = window.URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'hotel_report_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+}
+</script>
+
+<style media="print">
+    .btn, .modal, .sidebar, .card-footer { display: none !important; }
+    body { background: white !important; }
+    .card { border: 1px solid #ddd !important; }
+</style>
+{% endblock %}

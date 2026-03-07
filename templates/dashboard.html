@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Admin Dashboard</h2>
+    <div>
+        <span class="text-muted">Last updated: <span id="lastUpdate">Now</span></span>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Total Rooms</h6>
+                        <h2 class="mb-0">{{ total_rooms }}</h2>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up"></i> All rooms
+                        </small>
+                    </div>
+                    <div>
+                        <i class="fas fa-bed fa-2x text-primary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Available</h6>
+                        <h2 class="mb-0">{{ available_rooms }}</h2>
+                        <small class="text-muted">
+                            {{ (available_rooms / total_rooms * 100)|round|int if total_rooms > 0 else 0 }}% vacant
+                        </small>
+                    </div>
+                    <div>
+                        <i class="fas fa-check-circle fa-2x text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Occupied</h6>
+                        <h2 class="mb-0">{{ occupied_rooms }}</h2>
+                        <small class="text-muted">
+                            {{ (occupied_rooms / total_rooms * 100)|round|int if total_rooms > 0 else 0 }}% occupied
+                        </small>
+                    </div>
+                    <div>
+                        <i class="fas fa-door-closed fa-2x text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Total Guests</h6>
+                        <h2 class="mb-0">{{ total_guests }}</h2>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up"></i> Registered
+                        </small>
+                    </div>
+                    <div>
+                        <i class="fas fa-users fa-2x text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#quickBookingModal">
+                    <i class="fas fa-plus-circle"></i> New Booking
+                </button>
+            </div>
+            <div class="col-md-3 mb-2">
+                <a href="{{ url_for('rooms') }}" class="btn btn-success w-100">
+                    <i class="fas fa-bed"></i> Add Room
+                </a>
+            </div>
+            <div class="col-md-3 mb-2">
+                <a href="{{ url_for('guests') }}" class="btn btn-info w-100">
+                    <i class="fas fa-user-plus"></i> Add Guest
+                </a>
+            </div>
+            <div class="col-md-3 mb-2">
+                <a href="{{ url_for('analytics') }}" class="btn btn-warning w-100">
+                    <i class="fas fa-chart-pie"></i> Analytics
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Health -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-heartbeat"></i> System Status</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 text-center">
+                <div class="mb-2">
+                    <i class="fas fa-database fa-2x text-success"></i>
+                </div>
+                <h6>Database</h6>
+                <span class="badge bg-success">Operational</span>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="mb-2">
+                    <i class="fas fa-server fa-2x text-success"></i>
+                </div>
+                <h6>Server</h6>
+                <span class="badge bg-success">Online</span>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="mb-2">
+                    <i class="fas fa-bell fa-2x text-info"></i>
+                </div>
+                <h6>Notifications</h6>
+                <span class="badge bg-info">Active</span>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="mb-2">
+                    <i class="fas fa-shield-alt fa-2x text-success"></i>
+                </div>
+                <h6>Security</h6>
+                <span class="badge bg-success">Secured</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Revenue Trends (Last 7 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Room Types</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="roomTypeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Occupancy Chart -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar"></i> Occupancy Rate (Last 7 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="occupancyChart" height="60"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Bookings -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-calendar-check"></i> Recent Bookings</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Guest</th>
+                        <th>Room</th>
+                        <th>Check-in</th>
+                        <th>Status</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in recent_bookings %}
+                    <tr>
+                        <td><strong>#{{ booking.id }}</strong></td>
+                        <td>{{ booking.guest.name }}</td>
+                        <td>{{ booking.room.room_number }} - {{ booking.room.room_type }}</td>
+                        <td>{{ booking.check_in.strftime('%d-%m-%Y %H:%M') }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if booking.status == 'active' else 'secondary' }}">
+                                {{ booking.status.upper() }}
+                            </span>
+                        </td>
+                        <td>₹{{ booking.total_amount if booking.total_amount else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Revenue Chart
+    fetch('/api/revenue-chart')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: data.data,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+
+    // Room Type Chart
+    fetch('/api/room-type-chart')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('roomTypeChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+
+    // Occupancy Chart
+    fetch('/api/occupancy-chart')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('occupancyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Occupied',
+                        data: data.occupied,
+                        backgroundColor: 'rgba(255, 159, 64, 0.8)'
+                    }, {
+                        label: 'Available',
+                        data: data.available,
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+
+    // Update timestamp
+    setInterval(() => {
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+    }, 60000);
+</script>
+{% endblock %}

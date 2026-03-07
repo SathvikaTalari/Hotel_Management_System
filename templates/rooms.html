@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Room Management</h2>
+    <div>
+        <button class="btn btn-success me-2" onclick="filterRooms('available')">
+            <i class="fas fa-check-circle"></i> Available ({{ rooms|selectattr('status', 'equalto', 'available')|list|length }})
+        </button>
+        <button class="btn btn-danger me-2" onclick="filterRooms('occupied')">
+            <i class="fas fa-door-closed"></i> Occupied ({{ rooms|selectattr('status', 'equalto', 'occupied')|list|length }})
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoomModal">
+            <i class="fas fa-plus"></i> Add Room
+        </button>
+    </div>
+</div>
+
+<div class="row" id="roomsContainer">
+    {% for room in rooms %}
+    <div class="col-md-4 mb-3 room-card" data-status="{{ room.status }}">
+        <div class="card h-100 {% if room.status == 'occupied' %}border-danger{% else %}border-success{% endif %}">
+            <div class="position-relative">
+                <img src="{{ room.image_url }}" class="card-img-top" alt="Room {{ room.room_number }}" 
+                     style="height: 200px; object-fit: cover;">
+                <div class="position-absolute top-0 end-0 m-2">
+                    <span class="badge bg-{{ 'success' if room.status == 'available' else 'danger' }} fs-6">
+                        {{ room.status|upper }}
+                    </span>
+                </div>
+                <div class="position-absolute bottom-0 start-0 m-2">
+                    <span class="badge bg-dark">
+                        <i class="fas fa-users"></i> {{ room.capacity }} Guests
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="card-title mb-0">Room {{ room.room_number }}</h5>
+                    <h5 class="text-primary mb-0">₹{{ room.price }}/night</h5>
+                </div>
+                <p class="text-muted mb-2">{{ room.room_type }}</p>
+                
+                {% if room.amenities %}
+                <div class="mb-2">
+                    {% for amenity in room.amenities.split(',')[:3] %}
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-check"></i> {{ amenity.strip() }}
+                    </span>
+                    {% endfor %}
+                    {% if room.amenities.split(',')|length > 3 %}
+                    <span class="badge bg-light text-dark">+{{ room.amenities.split(',')|length - 3 }} more</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% set room_reviews = room.reviews %}
+                {% if room_reviews %}
+                <div class="mb-2">
+                    {% set avg_rating = (room_reviews|map(attribute='rating')|sum / room_reviews|length)|round|int %}
+                    {% for i in range(avg_rating) %}
+                    <i class="fas fa-star text-warning"></i>
+                    {% endfor %}
+                    <small class="text-muted">({{ room_reviews|length }})</small>
+                </div>
+                {% endif %}
+                
+                <div class="btn-group w-100 mt-2" role="group">
+                    <a href="{{ url_for('room_details', room_id=room.id) }}" class="btn btn-sm btn-info">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    {% if room.status == 'available' %}
+                    <a href="{{ url_for('delete_room', room_id=room.id) }}" 
+                       class="btn btn-sm btn-danger"
+                       onclick="return confirm('Delete this room?')">
+                       <i class="fas fa-trash"></i> Delete
+                    </a>
+                    {% else %}
+                    <button class="btn btn-sm btn-secondary" disabled>
+                        <i class="fas fa-door-closed"></i> Occupied
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Room Modal -->
+<div class="modal fade" id="addRoomModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Room</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_room') }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Room Number</label>
+                            <input type="text" class="form-control" name="room_number" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Room Type</label>
+                            <select class="form-select" name="room_type" required>
+                                <option value="Single">Single</option>
+                                <option value="Double">Double</option>
+                                <option value="Deluxe">Deluxe</option>
+                                <option value="Suite">Suite</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Price per Night</label>
+                            <input type="number" class="form-control" name="price" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Capacity (guests)</label>
+                            <input type="number" class="form-control" name="capacity" value="2" min="1" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Image URL</label>
+                        <input type="url" class="form-control" name="image_url" 
+                               placeholder="https://example.com/room-image.jpg">
+                        <small class="text-muted">Use free images from Unsplash.com or leave empty for default</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amenities (comma-separated)</label>
+                        <input type="text" class="form-control" name="amenities" 
+                               placeholder="WiFi, AC, TV, Mini Bar, Room Service">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Room</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterRooms(status) {
+    const cards = document.querySelectorAll('.room-card');
+    cards.forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

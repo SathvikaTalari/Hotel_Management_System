@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hotel Management System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            transition: all 0.3s;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar a.active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .stat-card {
+            border-left: 4px solid;
+        }
+
+        .stat-card.primary {
+            border-color: #667eea;
+        }
+
+        .stat-card.success {
+            border-color: #28a745;
+        }
+
+        .stat-card.warning {
+            border-color: #ffc107;
+        }
+
+        .stat-card.info {
+            border-color: #17a2b8;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .card {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .table {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .form-control,
+        body.dark-mode .form-select {
+            background-color: #3d3d3d;
+            color: #e0e0e0;
+            border-color: #555;
+        }
+
+        body.dark-mode .modal-content {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .text-muted {
+            color: #aaa !important;
+        }
+
+        /* Dark Mode Toggle Button */
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+    {% if current_user.is_authenticated %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 sidebar p-0">
+                <div class="p-4 text-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h4><i class="fas fa-hotel"></i> Hotel MS</h4>
+                            <small>{{ current_user.username }}</small>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('notifications') }}" class="text-white position-relative"
+                                title="Notifications">
+                                <i class="fas fa-bell fa-lg"></i>
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                    id="notificationBadge" style="font-size: 0.65rem; display: none;">
+                                    0
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <nav>
+                    {% if current_user.role == 'guest' %}
+                    <!-- Guest Navigation -->
+                    <a href="{{ url_for('guest_dashboard') }}"
+                        class="{% if request.endpoint == 'guest_dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i> My Dashboard
+                    </a>
+                    <a href="{{ url_for('guest_book_room') }}"
+                        class="{% if request.endpoint == 'guest_book_room' %}active{% endif %}">
+                        <i class="fas fa-bed"></i> Book a Room
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}active{% endif %}">
+                        <i class="fas fa-user"></i> My Profile
+                    </a>
+                    <!-- Add for guests -->
+                    <a href="{{ url_for('notifications') }}"
+                        class="{% if request.endpoint == 'notifications' %}active{% endif %}">
+                        <i class="fas fa-bell"></i> Notifications
+                    </a>
+                    <a href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                    {% else %}
+                    <!-- Staff/Admin Navigation -->
+                    <a href="{{ url_for('dashboard') }}"
+                        class="{% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('rooms') }}" class="{% if request.endpoint == 'rooms' %}active{% endif %}">
+                        <i class="fas fa-bed"></i> Rooms
+                    </a>
+                    <a href="{{ url_for('guests') }}" class="{% if request.endpoint == 'guests' %}active{% endif %}">
+                        <i class="fas fa-users"></i> Guests
+                    </a>
+                    <a href="{{ url_for('bookings') }}"
+                        class="{% if request.endpoint == 'bookings' %}active{% endif %}">
+                        <i class="fas fa-calendar-check"></i> Bookings
+                    </a>
+                    <a href="{{ url_for('calendar') }}"
+                        class="{% if request.endpoint == 'calendar' %}active{% endif %}">
+                        <i class="fas fa-calendar-alt"></i> Calendar
+                    </a>
+                    <a href="{{ url_for('reports') }}" class="{% if request.endpoint == 'reports' %}active{% endif %}">
+                        <i class="fas fa-chart-line"></i> Reports
+                    </a>
+                    <a href="{{ url_for('analytics') }}"
+                        class="{% if request.endpoint == 'analytics' %}active{% endif %}">
+                        <i class="fas fa-chart-pie"></i> Analytics
+                    </a>
+                    <a href="{{ url_for('services') }}"
+                        class="{% if request.endpoint == 'services' %}active{% endif %}">
+                        <i class="fas fa-concierge-bell"></i> Services
+                    </a>
+                    <a href="{{ url_for('staff') }}" class="{% if request.endpoint == 'staff' %}active{% endif %}">
+                        <i class="fas fa-users-cog"></i> Staff
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}active{% endif %}">
+                        <i class="fas fa-user-cog"></i> Profile
+                    </a>
+                    <!-- Add for admin/staff too -->
+                    <a href="{{ url_for('notifications') }}"
+                        class="{% if request.endpoint == 'notifications' %}active{% endif %}">
+                        <i class="fas fa-bell"></i> Notifications
+                    </a>
+                    <a href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            <div class="col-md-10 p-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    {% block login_content %}{% endblock %}
+    {% endif %}
+
+    <!-- Dark Mode Toggle Button -->
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">
+        <i class="fas fa-moon" id="darkModeIcon"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+
+            // Change icon
+            const icon = document.getElementById('darkModeIcon');
+            icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Load dark mode preference
+        window.addEventListener('DOMContentLoaded', function () {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeIcon').className = 'fas fa-sun';
+            }
+        });
+    </script>
+
+    <script>
+        // Check for unread notifications every 30 seconds
+        function checkNotifications() {
+            fetch('/api/notifications/unread')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('notificationBadge');
+                    if (badge) {
+                        if (data.count > 0) {
+                            badge.textContent = data.count;
+                            badge.style.display = 'inline';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => console.log('Notification check failed:', error));
+        }
+
+        // Check immediately and then every 30 seconds
+        if (document.getElementById('notificationBadge')) {
+            checkNotifications();
+            setInterval(checkNotifications, 30000);
+        }
+    </script>
+
+</body>
+
+</html>
