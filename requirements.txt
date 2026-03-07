@@ -6,3 +6,4 @@ reportlab==4.0.4
 SQLAlchemy==2.0.25
 flask-cors==6.0.1
 Flask-Mail==0.10.0
+gunicorn==21.2.0
