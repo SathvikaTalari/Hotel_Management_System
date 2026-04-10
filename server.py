@@ -145,6 +145,11 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Routes
+@app.route('/hotel-bg')
+def hotel_bg():
+    from flask import send_from_directory
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'Hotel.png')
+
 @app.route('/')
 def index():
     return redirect(url_for('login'))

@@ -1,39 +1,233 @@
 {% extends "base.html" %}
 {% block title %}Login - Hotel Management{% endblock %}
 {% block login_content %}
-<div class="container">
-    <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
-        <div class="col-md-4">
-            <div class="card shadow-lg">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <i class="fas fa-hotel fa-3x text-primary"></i>
-                        <h3 class="mt-3">Hotel Management</h3>
-                    </div>
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">{{ message }}</div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" class="form-control" name="username" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" class="form-control" name="password" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Login</button>
-                    </form>
-                    <div class="text-center mt-3">
-                        <small class="text-muted">Staff login: admin / admin123</small><br>
-                        <a href="{{ url_for('register') }}" class="btn btn-link">New Guest? Register Here</a>
-                    </div>
+<style>
+    .login-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{{ url_for("hotel_bg") }}') no-repeat center center;
+        background-size: cover;
+        z-index: 0;
+    }
+
+    .login-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 41, 80, 0.65) 50%, rgba(55, 48, 107, 0.7) 100%);
+        z-index: 1;
+    }
+
+    .login-wrapper {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .login-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 20px;
+        padding: 3rem 2.5rem;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        animation: fadeSlideUp 0.8s ease-out;
+    }
+
+    @keyframes fadeSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .login-card .brand-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.2rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-card .brand-icon i {
+        font-size: 1.8rem;
+        color: #fff;
+    }
+
+    .login-card h3 {
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .login-card .subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+    }
+
+    .login-card .form-label {
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .login-card .form-control {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        padding: 0.75rem 1rem 0.75rem 2.8rem;
+        color: #fff;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+    .login-card .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+    }
+
+    .login-card .form-control:focus {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(102, 126, 234, 0.6);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        color: #fff;
+    }
+
+    .input-group-icon {
+        position: relative;
+    }
+
+    .input-group-icon i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.95rem;
+        z-index: 3;
+        transition: color 0.3s ease;
+    }
+
+    .input-group-icon:focus-within i {
+        color: #667eea;
+    }
+
+    .btn-login {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 0.8rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        color: #fff;
+        width: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        letter-spacing: 0.02em;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+        background: linear-gradient(135deg, #5a71d4 0%, #6a4196 100%);
+        color: #fff;
+    }
+
+    .btn-login:active {
+        transform: translateY(0);
+    }
+
+    .login-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+
+    .login-footer small {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 0.8rem;
+    }
+
+    .login-footer a {
+        color: #98a8f8;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    .login-footer a:hover {
+        color: #c3b1f0;
+    }
+
+    .alert {
+        border-radius: 12px;
+        border: none;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="login-bg"></div>
+<div class="login-overlay"></div>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="text-center">
+            <div class="brand-icon">
+                <i class="fas fa-hotel"></i>
+            </div>
+            <h3>Hotel Management</h3>
+            <p class="subtitle">Sign in to your account</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <div class="input-group-icon">
+                    <i class="fas fa-user"></i>
+                    <input type="text" class="form-control" name="username" placeholder="Enter your username" required>
                 </div>
             </div>
+            <div class="mb-4">
+                <label class="form-label">Password</label>
+                <div class="input-group-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" class="form-control" name="password" placeholder="Enter your password" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-login">Sign In</button>
+        </form>
+
+        <div class="login-footer">
+            <small>Staff login: admin / admin123</small><br>
+            <a href="{{ url_for('register') }}">New Guest? Register Here</a>
         </div>
     </div>
 </div>
