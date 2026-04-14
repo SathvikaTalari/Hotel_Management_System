@@ -60,8 +60,6 @@ class Room(db.Model):
     image_url = db.Column(db.String(500), default='https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=500')
     amenities = db.Column(db.String(500))  # Comma-separated: "WiFi,AC,TV"
     capacity = db.Column(db.Integer, default=2)
-    cleaning_status = db.Column(db.String(20), default='clean')  # clean, cleaning, dirty
-    last_cleaned = db.Column(db.DateTime)
     bookings = db.relationship('Booking', backref='room', lazy=True)
     reviews = db.relationship('Review', backref='room', lazy=True)
 
@@ -1416,10 +1414,8 @@ def init_db():
 def health():
     return jsonify({'status': 'healthy'}), 200
 
-# Initialize database tables on startup (works with both Gunicorn and direct run)
-init_db()
-
 if __name__ == '__main__':
+    init_db()
     # Use environment variable for port (required for Render/Railway)
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
